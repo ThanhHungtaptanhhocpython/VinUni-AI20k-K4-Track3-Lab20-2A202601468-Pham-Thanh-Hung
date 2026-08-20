@@ -38,8 +38,14 @@
 
 ## 5. Trace Visualization & Observability (LangSmith & Langfuse)
 
-### Trace Screenshot
+### 5.1. LangSmith Multi-Agent Graph Trace Tree
 ![LangSmith Multi-Agent Trace](assets/trace_screenshot.png)
+
+### 5.2. LangSmith Traces Overview
+![LangSmith Traces Overview](assets/langsmith_traces.png)
+
+### 5.3. Langfuse Observability Dashboard
+![Langfuse Dashboard](assets/langfuse_traces.png)
 
 ### Execution Trace Tree Breakdown (LangSmith)
 - **Project**: `multi-agent-research-lab`

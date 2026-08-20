@@ -44,7 +44,7 @@ class Settings(BaseSettings):
 
     tavily_api_key: str | None = Field(default=None, validation_alias="TAVILY_API_KEY")
 
-    llm_max_tokens: int = Field(default=2000, ge=100, le=32000, validation_alias="LLM_MAX_TOKENS")
+    llm_max_tokens: int = Field(default=1500, ge=100, le=32000, validation_alias="LLM_MAX_TOKENS")
     max_iterations: int = Field(default=6, ge=1, le=20, validation_alias="MAX_ITERATIONS")
     timeout_seconds: int = Field(default=60, ge=5, le=600, validation_alias="TIMEOUT_SECONDS")
 

@@ -37,10 +37,36 @@ class LLMClient:
                 )
 
             base_url = self.settings.effective_base_url
-            self._client = OpenAI(
+            raw_client = OpenAI(
                 api_key=api_key,
                 base_url=base_url,
             )
+
+            # Auto-wrap with LangSmith if configured
+            if self.settings.langsmith_api_key:
+                try:
+                    from langsmith.wrappers import wrap_openai
+
+                    raw_client = wrap_openai(raw_client)
+                except Exception:
+                    pass
+
+            # Auto-wrap with Langfuse if configured
+            if self.settings.langfuse_public_key and self.settings.langfuse_secret_key:
+                try:
+                    from langfuse.openai import OpenAI as LangfuseOpenAI
+
+                    raw_client = LangfuseOpenAI(
+                        api_key=api_key,
+                        base_url=base_url,
+                        public_key=self.settings.langfuse_public_key,
+                        secret_key=self.settings.langfuse_secret_key,
+                        host=self.settings.langfuse_host,
+                    )
+                except Exception:
+                    pass
+
+            self._client = raw_client
         return self._client
 
     def complete(self, system_prompt: str, user_prompt: str) -> LLMResponse:

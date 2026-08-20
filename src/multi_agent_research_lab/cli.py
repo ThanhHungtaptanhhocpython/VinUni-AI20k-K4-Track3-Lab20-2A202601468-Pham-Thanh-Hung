@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from time import perf_counter
 from typing import Annotated
@@ -24,6 +25,21 @@ console = Console()
 def _init() -> None:
     settings = get_settings()
     configure_logging(settings.log_level)
+
+    # Automatically export LangSmith environment variables if configured
+    if settings.langsmith_api_key:
+        os.environ["LANGCHAIN_TRACING_V2"] = "true"
+        os.environ["LANGCHAIN_API_KEY"] = settings.langsmith_api_key
+        os.environ["LANGSMITH_API_KEY"] = settings.langsmith_api_key
+        os.environ["LANGCHAIN_PROJECT"] = settings.langsmith_project
+        os.environ["LANGSMITH_PROJECT"] = settings.langsmith_project
+
+    # Automatically export Langfuse environment variables if configured
+    if settings.langfuse_public_key and settings.langfuse_secret_key:
+        os.environ["LANGFUSE_PUBLIC_KEY"] = settings.langfuse_public_key
+        os.environ["LANGFUSE_SECRET_KEY"] = settings.langfuse_secret_key
+        os.environ["LANGFUSE_HOST"] = settings.langfuse_host
+
 
 
 def _parse_query(query: str) -> ResearchQuery:
