@@ -7,7 +7,7 @@
 | Architecture | Latency (s) | Cost (USD) | Quality | Citations | Fail Rate | Details |
 |---|---:|---:|---:|---:|---:|---|
 | **Single-Agent Baseline** | 16.11s | $0.000493 | 6.0/10 | 0% | 0% | Tokens: 45 in / 810 out | Iterations: 0 |
-| **Multi-Agent Research System** | 38.79s | $0.002074 | 10.0/10 | 100% | 0% | Tokens: 3976 in / 2463 out | Iterations: 4 |
+| **Multi-Agent Research System** | 38.79s | $0.002074 | 10.0/10 | 100% | 0% | Tokens: 3976 in / 2463 out | Iterations: 4 |  
 
 ## 2. Comparative Analysis
 
@@ -35,3 +35,32 @@
 
 - **When to use Single-Agent**: Simple queries, latency-critical real-time chat, summarization of user-provided short text, tasks without need for multi-source verification.
 - **When to use Multi-Agent**: Deep scientific/market research, multi-source conflict reconciliation, tasks requiring citation discipline and separation of concerns (investigation vs. evaluation vs. authoring).
+
+## 5. Trace Visualization & Observability (LangSmith & Langfuse)
+
+### Trace Screenshot
+![LangSmith Multi-Agent Trace](assets/trace_screenshot.png)
+
+### Execution Trace Tree Breakdown (LangSmith)
+- **Project**: `multi-agent-research-lab`
+- **Root Run**: `LangGraph` (Total Latency: **41.08s** | Total Tokens: **6.5k** | Est. Cost: **$0.0021**)
+
+```text
+LangGraph (41.08s | 6.5k tokens)
+├── supervisor (0.00s) ──> _route_condition (0.00s) ──> researcher
+├── researcher (8.96s)
+│   └── ChatOpenAI [openai/gpt-4o-mini] (6.97s | 2.2k tokens)
+├── supervisor (0.00s) ──> _route_condition (0.00s) ──> analyst
+├── analyst (16.19s)
+│   └── ChatOpenAI [openai/gpt-4o-mini] (16.15s | 1.5k tokens)
+├── supervisor (0.00s) ──> _route_condition (0.00s) ──> writer
+├── writer (15.80s)
+│   └── ChatOpenAI [openai/gpt-4o-mini] (15.77s | 2.8k tokens)
+└── supervisor (0.00s) ──> _route_condition (0.00s) ──> done (END)
+```
+
+### State Inspection
+- **Input State**: `ResearchState(request={'query': 'Research GraphRAG state-of-the-art and write a summary', 'max_sources': 5})`
+- **Intermediary State**: `research_notes` populated with 5 empirical sources -> `analysis_notes` synthesized with trade-offs.
+- **Output State**: `final_answer` fully drafted with structured sections and inline citations.
+
