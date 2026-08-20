@@ -61,6 +61,7 @@ class LLMClient:
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
                 ],
+                max_tokens=self.settings.llm_max_tokens,
                 timeout=self.settings.timeout_seconds,
             )
 
