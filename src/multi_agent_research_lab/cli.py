@@ -1,3 +1,4 @@
+from pathlib import Path
 from time import perf_counter
 from typing import Annotated
 
@@ -10,6 +11,8 @@ from multi_agent_research_lab.core.config import get_settings
 from multi_agent_research_lab.core.errors import StudentTodoError
 from multi_agent_research_lab.core.schemas import AgentName, AgentResult, ResearchQuery
 from multi_agent_research_lab.core.state import ResearchState
+from multi_agent_research_lab.evaluation.benchmark import run_benchmark
+from multi_agent_research_lab.evaluation.report import render_markdown_report
 from multi_agent_research_lab.graph.workflow import MultiAgentWorkflow
 from multi_agent_research_lab.observability.logging import configure_logging
 from multi_agent_research_lab.services.llm_client import LLMClient
@@ -152,6 +155,89 @@ def multi_agent(
         console.print(Panel(result.final_answer, title="Multi-Agent Final Research Report"))
     else:
         console.print(Panel("No final answer produced.", title="Result", style="yellow"))
+
+
+@app.command("benchmark")
+def benchmark(
+    query: Annotated[
+        str,
+        typer.Option("--query", "-q", help="Research query for benchmark comparison"),
+    ] = "Research GraphRAG state-of-the-art and write a summary",
+    output: Annotated[
+        str,
+        typer.Option("--output", "-o", help="Output markdown report path"),
+    ] = "reports/benchmark_report.md",
+) -> None:
+    """Run benchmark comparing Single-Agent Baseline vs Multi-Agent Workflow."""
+
+    _init()
+    settings = get_settings()
+    console.print(
+        Panel.fit(
+            f"[bold cyan]Benchmark Query:[/bold cyan] {query}\n"
+            f"[bold cyan]Target Model:[/bold cyan] {settings.effective_model}\n"
+            f"[bold cyan]Output Report:[/bold cyan] {output}",
+            title="Starting Single vs Multi-Agent Benchmark",
+        )
+    )
+
+    # 1. Runner for Single-Agent Baseline
+    def _run_baseline(q: str) -> ResearchState:
+        req = _parse_query(q)
+        st = ResearchState(request=req)
+        llm = LLMClient(settings)
+        sys_p = (
+            "You are an expert research assistant. Conduct comprehensive analysis on the topic "
+            "and provide a well-structured synthesis report."
+        )
+        resp = llm.complete(system_prompt=sys_p, user_prompt=req.query)
+        st.final_answer = resp.content
+        st.agent_results.append(
+            AgentResult(
+                agent=AgentName.WRITER,
+                content=resp.content,
+                metadata={
+                    "input_tokens": resp.input_tokens,
+                    "output_tokens": resp.output_tokens,
+                },
+            )
+        )
+        return st
+
+    # 2. Runner for Multi-Agent Workflow
+    def _run_multi_agent(q: str) -> ResearchState:
+        req = _parse_query(q)
+        st = ResearchState(request=req)
+        wf = MultiAgentWorkflow(settings=settings)
+        return wf.run(st)
+
+    console.print("[cyan]Running Single-Agent Baseline...[/cyan]")
+    _, baseline_metrics = run_benchmark("Single-Agent Baseline", query, _run_baseline)
+
+    console.print("[cyan]Running Multi-Agent Workflow...[/cyan]")
+    _, multi_metrics = run_benchmark("Multi-Agent Research System", query, _run_multi_agent)
+
+    # 3. Render and save report
+    all_metrics = [baseline_metrics, multi_metrics]
+    report_md = render_markdown_report(all_metrics, query=query)
+
+    out_path = Path(output)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(report_md, encoding="utf-8")
+
+    console.print(
+        Panel.fit(
+            f"[bold green]Single-Agent:[/bold green] {baseline_metrics.latency_seconds:.2f}s | "
+            f"Quality: {baseline_metrics.quality_score:.1f}/10 | "
+            f"Cost: ${baseline_metrics.estimated_cost_usd:.6f}\n"
+            f"[bold green]Multi-Agent:[/bold green]  {multi_metrics.latency_seconds:.2f}s | "
+            f"Quality: {multi_metrics.quality_score:.1f}/10 | "
+            f"Cost: ${multi_metrics.estimated_cost_usd:.6f}\n"
+            f"[bold yellow]Report Saved:[/bold yellow] {output}",
+            title="Benchmark Completed Successfully",
+            style="green",
+        )
+    )
 
 
 if __name__ == "__main__":
