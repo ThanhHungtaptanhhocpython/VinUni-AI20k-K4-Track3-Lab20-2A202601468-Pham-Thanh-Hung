@@ -49,10 +49,10 @@
 
 ### Execution Trace Tree Breakdown (LangSmith)
 - **Project**: `multi-agent-research-lab`
-- **Root Run**: `LangGraph` (Total Latency: **41.08s** | Total Tokens: **6.5k** | Est. Cost: **$0.0021**)
+- **Root Run**: `LangGraph` (Total Latency: **41.06s** | Total Tokens: **6.5k** | Est. Cost: **$0.0021**)
 
 ```text
-LangGraph (41.08s | 6.5k tokens)
+LangGraph (41.06s | 6.5k tokens)
 ├── supervisor (0.00s) ──> _route_condition (0.00s) ──> researcher
 ├── researcher (8.96s)
 │   └── ChatOpenAI [openai/gpt-4o-mini] (6.97s | 2.2k tokens)

@@ -138,14 +138,16 @@ Các phần học viên cần tự làm:
 6. Thêm tracing provider thật: LangSmith, Langfuse hoặc OpenTelemetry.
 7. Viết benchmark report.
 
-## Deliverables
+## Deliverables & Báo Cáo
 
 Học viên nộp:
 
 1. GitHub repo cá nhân.
-2. Screenshot trace hoặc link trace.
-3. `reports/benchmark_report.md` so sánh single vs multi-agent.
-4. Một đoạn giải thích failure mode và cách fix.
+2. Screenshot trace hoặc link trace (LangSmith / Langfuse).
+3. **Trang so sánh chiến thuật trực quan (Interactive Dashboard)**: [`reports/strategy_comparison.html`](file:///c:/Users/Lenovo/Documents/AITC/Day%2020/VinUni-AI20k-K4-Track3-Lab20-2A202601468-Pham-Thanh-Hung/reports/strategy_comparison.html)
+4. **Báo cáo phân tích chuyên sâu Single vs Multi-Agent**: [`reports/strategy_comparison.md`](file:///c:/Users/Lenovo/Documents/AITC/Day%2020/VinUni-AI20k-K4-Track3-Lab20-2A202601468-Pham-Thanh-Hung/reports/strategy_comparison.md)
+5. `reports/benchmark_report.md` so sánh số liệu định lượng chi tiết.
+6. Tài liệu giải thích failure modes và các guardrails phòng chống (`max_iterations`, `retry`, `multi-tier fallback`).
 
 ## References
 
