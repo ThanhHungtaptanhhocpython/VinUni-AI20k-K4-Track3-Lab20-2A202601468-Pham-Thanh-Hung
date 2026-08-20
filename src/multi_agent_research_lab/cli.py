@@ -97,17 +97,61 @@ def baseline(
 def multi_agent(
     query: Annotated[str, typer.Option("--query", "-q", help="Research query")],
 ) -> None:
-    """Run the multi-agent workflow skeleton."""
+    """Run the multi-agent workflow (Supervisor + Researcher + Analyst + Writer)."""
 
     _init()
-    state = ResearchState(request=_parse_query(query))
-    workflow = MultiAgentWorkflow()
+    settings = get_settings()
+    request = _parse_query(query)
+    state = ResearchState(request=request)
+
+    console.print(
+        Panel.fit(
+            f"[bold cyan]Query:[/bold cyan] {request.query}\n"
+            f"[bold cyan]Model:[/bold cyan] {settings.effective_model}\n"
+            f"[bold cyan]Max Iterations:[/bold cyan] {settings.max_iterations}",
+            title="Multi-Agent Research System (Starting)",
+        )
+    )
+
+    workflow = MultiAgentWorkflow(settings=settings)
+    start_time = perf_counter()
     try:
         result = workflow.run(state)
     except StudentTodoError as exc:
         console.print(Panel.fit(str(exc), title="Expected TODO", style="yellow"))
         raise typer.Exit(code=2) from exc
-    console.print(result.model_dump_json(indent=2))
+    elapsed_time = perf_counter() - start_time
+
+    # Calculate token usage across agent results
+    total_in = sum(
+        res.metadata.get("input_tokens") or 0
+        for res in result.agent_results
+        if isinstance(res.metadata, dict)
+    )
+    total_out = sum(
+        res.metadata.get("output_tokens") or 0
+        for res in result.agent_results
+        if isinstance(res.metadata, dict)
+    )
+
+    # Display routing execution path
+    route_display = " -> ".join(result.route_history)
+    console.print(
+        Panel.fit(
+            f"[bold yellow]Route Timeline:[/bold yellow] {route_display}\n"
+            f"[bold yellow]Iterations:[/bold yellow] {result.iteration} | "
+            f"[bold yellow]Sources Gathered:[/bold yellow] {len(result.sources)}\n"
+            f"[bold green]Total Latency:[/bold green] {elapsed_time:.2f}s | "
+            f"[bold green]Total Tokens:[/bold green] In: {total_in}, Out: {total_out}",
+            title="Multi-Agent Workflow Execution Summary",
+            style="green",
+        )
+    )
+
+    if result.final_answer:
+        console.print(Panel(result.final_answer, title="Multi-Agent Final Research Report"))
+    else:
+        console.print(Panel("No final answer produced.", title="Result", style="yellow"))
 
 
 if __name__ == "__main__":
